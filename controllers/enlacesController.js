@@ -34,3 +34,31 @@ exports.nuevoEnlace = async (req, res, next) => {
     console.log(error);
   }
 };
+
+//Obtener enlace
+exports.ObtenerEnlace = async (req, res, next) => {
+  const { url } = req.params;
+
+  //Verificar existe enlace
+  const enlace = await Enlaces.findOne({ url });
+  if (!enlace) {
+    res.status(404).json({ msg: "El enlace no existe" });
+    return next();
+  }
+  //Si existe
+  res.json({ archivo: enlace.nombre });
+
+  //Si descargas = 1, borrar entrada y archivo
+  const {descargas, nombre} = enlace;
+  if(descargas == 1){
+    //Eliminar archivo
+    req.archivo = nombre
+    //Eliminar entrada
+    await Enlaces.findOneAndRemove(req.params.url);
+    next();
+  } else{
+    enlace.descargas--;
+    await enlace.save();
+  }
+  //Si descargas > 1, reducir descargas
+};
